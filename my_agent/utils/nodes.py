@@ -1,10 +1,13 @@
 from functools import lru_cache
 from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
-from my_agent.utils.tools import tools
+from my_agent.utils.tools import tools, search_agent, search_properties
 from langgraph.prebuilt import ToolNode
+from langgraph.graph import StateGraph, END
 
 
+tool_node1 = ToolNode([search_properties])
+tool_node2 = ToolNode([search_agent])
 @lru_cache(maxsize=4)
 def _get_model(model_name: str):
     if model_name == "openai":
@@ -15,7 +18,8 @@ def _get_model(model_name: str):
         model = ChatOpenAI(temperature=0, model_name="gpt-4o")
         # raise ValueError(f"Unsupported model type: {model_name}")
 
-    model = model.bind_tools(tools)
+    # model = model.bind_tools([])
+    model = model.bind_tools([search_agent,search_properties])
     return model
 
 # Define the function that determines whether to continue or not
@@ -24,10 +28,10 @@ def should_continue(state):
     last_message = messages[-1]
     # If there are no tool calls, then we finish
     if not last_message.tool_calls:
-        return "end"
+        return END
     # Otherwise if there is, we continue
     else:
-        return "continue"
+        return last_message.tool_calls[0]["name"]
 
 
 system_prompt = """Be a helpful assistant"""
@@ -43,4 +47,4 @@ def call_model(state, config):
     return {"messages": [response]}
 
 # Define the function to execute tools
-tool_node = ToolNode(tools)
+print(tools)

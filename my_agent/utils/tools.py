@@ -78,10 +78,10 @@ class AgentSearchInput(BaseModel):
     )    
 @tool(args_schema=AgentSearchInput)
 def search_agent(Name) ->Dict:
-    """Search agent based on input filters."""
+    """Search property agent based on name """
     # Implement your API connection and handling here
     # Dummy data for the sake of example
-    print("1")
+    # print("1")
     properties = [
         {"Agent Name: ": "JohnDoe",
         "Agent profile":"www.johndoe.com",
