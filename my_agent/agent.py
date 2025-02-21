@@ -42,8 +42,8 @@ workflow.add_conditional_edges(
 
 # We now add a normal edge from `tools` to `agent`.
 # This means that after `tools` is called, `agent` node is called next.
-workflow.add_edge("search_properties", "agent")
-workflow.add_edge("search_agent", "agent")
+workflow.add_edge("search_properties", "output_parser")
+workflow.add_edge("search_agent", "output_parser")
 # workflow.add_edge("output_parser", "agent")
 workflow.add_edge("output_parser", END)
 

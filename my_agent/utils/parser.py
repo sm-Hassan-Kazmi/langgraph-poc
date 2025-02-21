@@ -40,7 +40,7 @@ class RichContent(BaseModel):
 
 class Answer(BaseModel):
     pretext: str = Field(description="Textual Response")
-    Card: Union[PropertyCard, RichContent] = Field(description="JSON object with all the details that will be used to render the card")
+    Card: List[Union[PropertyCard, RichContent]] = Field(description="JSON object with all the details that will be used to render the card")
 
 parser = JsonOutputParser(pydantic_object=Answer)
 
