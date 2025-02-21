@@ -4,7 +4,9 @@ from langchain_openai import ChatOpenAI
 from my_agent.utils.tools import tools, search_agent, search_properties
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import StateGraph, END
+from my_agent.utils.parser import Answer, RichContent
 
+flag= False
 
 tool_node1 = ToolNode([search_properties])
 tool_node2 = ToolNode([search_agent])
@@ -27,9 +29,9 @@ def should_continue(state):
     messages = state["messages"]
     last_message = messages[-1]
     # If there are no tool calls, then we finish
-    if not last_message.tool_calls:
-        return END
-    # Otherwise if there is, we continue
+    if not last_message.tool_calls:           
+        return "output_parser"
+    # # Otherwise if there is, we continue
     else:
         return last_message.tool_calls[0]["name"]
 
@@ -46,5 +48,14 @@ def call_model(state, config):
     # We return a list, because this will get added to the existing list
     return {"messages": [response]}
 
-# Define the function to execute tools
-print(tools)
+def output_parser(state, config):
+    messages = state["messages"]
+    Schema = Answer.schema()
+    prompt ="Be a helpful assistant and Extract the event information from last ai message. and create a json object with only relevant fields from the following schema:  {}".format(Schema)
+    print(prompt)
+    messages = [{"role": "system", "content":  prompt}] + messages
+    model =model = ChatOpenAI(temperature=0, model_name="gpt-4o")
+    response = model.invoke(messages)
+    # We return a list, because this will get added to the existing list
+    print(response)
+    return {"messages": [response]}

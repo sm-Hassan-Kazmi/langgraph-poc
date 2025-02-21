@@ -1,7 +1,7 @@
 from typing import TypedDict, Literal
 
 from langgraph.graph import StateGraph, END
-from my_agent.utils.nodes import call_model, should_continue, tool_node1,tool_node2
+from my_agent.utils.nodes import call_model, should_continue, tool_node1,tool_node2, output_parser
 from my_agent.utils.state import AgentState
 
 
@@ -15,6 +15,7 @@ workflow = StateGraph(AgentState, config_schema=GraphConfig)
 
 # Define the two nodes we will cycle between
 workflow.add_node("agent", call_model)
+workflow.add_node("output_parser", output_parser)
 workflow.add_node("search_properties", tool_node1)
 workflow.add_node("search_agent", tool_node2)
 
@@ -36,36 +37,17 @@ workflow.add_conditional_edges(
     # will be matched against the keys in this mapping.
     # Based on which one it matches, that node will then be called.
         # If `tools`, then we call the tool node.
-       [  "search_properties","search_agent", END],
+       [  "search_properties","search_agent", "output_parser"],
 )
 
 # We now add a normal edge from `tools` to `agent`.
 # This means that after `tools` is called, `agent` node is called next.
 workflow.add_edge("search_properties", "agent")
 workflow.add_edge("search_agent", "agent")
+# workflow.add_edge("output_parser", "agent")
+workflow.add_edge("output_parser", END)
 
 # Finally, we compile it!
 # This compiles it into a LangChain Runnable,
 # meaning you can use it as you would any other runnable
 graph = workflow.compile()
-
-# def stream_graph_updates(user_input: str):
-#     for event in graph.stream({"messages": [("user", user_input)]}):
-#         for value in event.values():
-#             print(value)
-#             print("Assistant:", value["messages"][-1].content)
-
-# while True:
-#     try:
-#         user_input = input("User: ")
-#         if user_input.lower() in ["quit", "exit", "q"]:
-#             print("Goodbye!")
-#             break
-
-#         stream_graph_updates(user_input)
-#     except:
-#         # fallback if input() is not available
-#         user_input = "What do you know about LangGraph?"
-#         print("User: " + user_input)
-#         stream_graph_updates(user_input)
-#         break
