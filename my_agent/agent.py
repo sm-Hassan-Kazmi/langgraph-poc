@@ -1,7 +1,7 @@
 from typing import TypedDict, Literal
 
 from langgraph.graph import StateGraph, END
-from my_agent.utils.nodes import call_model, should_continue, tool_node1,tool_node2, output_parser
+from my_agent.utils.nodes import call_model, should_continue, tool_node1,tool_node2, output_parser, tool_node3
 from my_agent.utils.state import AgentState
 
 
@@ -18,6 +18,7 @@ workflow.add_node("agent", call_model)
 workflow.add_node("output_parser", output_parser)
 workflow.add_node("search_properties", tool_node1)
 workflow.add_node("search_agent", tool_node2)
+workflow.add_node("search_properties_by_address", tool_node3)
 
 # Set the entrypoint as `agent`
 # This means that this node is the first one called
@@ -37,13 +38,14 @@ workflow.add_conditional_edges(
     # will be matched against the keys in this mapping.
     # Based on which one it matches, that node will then be called.
         # If `tools`, then we call the tool node.
-       [  "search_properties","search_agent", "output_parser"],
+       [  "search_properties","search_agent","search_properties_by_address", "output_parser"],
 )
 
 # We now add a normal edge from `tools` to `agent`.
 # This means that after `tools` is called, `agent` node is called next.
 workflow.add_edge("search_properties", "output_parser")
 workflow.add_edge("search_agent", "output_parser")
+workflow.add_edge("search_properties_by_address", "output_parser")
 # workflow.add_edge("output_parser", "agent")
 workflow.add_edge("output_parser", END)
 

@@ -1,7 +1,7 @@
 from functools import lru_cache
 from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
-from my_agent.utils.tools import tools, search_agent, search_properties
+from my_agent.utils.tools import tools, search_agent, search_properties, search_properties_by_address
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import StateGraph, END
 from my_agent.utils.parser import Answer, RichContent
@@ -10,6 +10,7 @@ flag= False
 
 tool_node1 = ToolNode([search_properties])
 tool_node2 = ToolNode([search_agent])
+tool_node3 = ToolNode([search_properties_by_address])
 @lru_cache(maxsize=4)
 def _get_model(model_name: str):
     if model_name == "openai":
@@ -21,7 +22,7 @@ def _get_model(model_name: str):
         # raise ValueError(f"Unsupported model type: {model_name}")
 
     # model = model.bind_tools([])
-    model = model.bind_tools([search_agent,search_properties])
+    model = model.bind_tools([search_agent,search_properties, search_properties_by_address])
     return model
 
 # Define the function that determines whether to continue or not
@@ -51,11 +52,13 @@ def call_model(state, config):
 def output_parser(state, config):
     messages = state["messages"]
     Schema = Answer.schema()
+    
+    if(state["messages"][-1].name == "search_properties_by_address"):
+        Schema = {"pretext": str}
     prompt ="Be a helpful assistant and Extract the event information from last ai message. and create a json object with only relevant fields from the following schema:  {}".format(Schema)
-    print(prompt)
+
     messages = [{"role": "system", "content":  prompt}] + messages
     model =model = ChatOpenAI(temperature=0, model_name="gpt-4o")
     response = model.invoke(messages)
     # We return a list, because this will get added to the existing list
-    print(response)
     return {"messages": [response]}

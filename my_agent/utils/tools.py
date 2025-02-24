@@ -1,14 +1,10 @@
-from langchain_community.tools.tavily_search import TavilySearchResults
-
-
-
 import http.client
 import json
 import urllib
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 from langchain.tools import tool
-from my_agent.utils.tool_utils import search_community_ID, search_school_ID, get_fips_codes,get_property_details, map_property_types_to_ids, map_property_availablity
+from my_agent.utils.tool_utils import search_community_ID, search_school_ID, get_fips_codes,get_property_details, map_property_types_to_ids, map_property_availablity, get_property_search, extract_key_objects
 from urllib.parse import urlencode
 from my_agent.utils.models.property_search import PropertySearchFields, PropertySearchInput
 
@@ -27,6 +23,68 @@ class AgentSearchInput(BaseModel):
     Name:str= Field(
         description="Agent Name to search properties or details about him/her"
     )    
+
+class PropertySearchByAddress(BaseModel):
+    address: Optional[str] = Field(
+        None, description="List of addresses to search properties"
+    )
+    harid: Optional[int] = Field(None, description="List of harid to search properties")
+
+@tool
+def search_properties_by_address(
+    obj: PropertySearchByAddress,
+) -> dict[str, list[Any]]:
+    """Search properties based on property address OR harid filter"""
+
+    conn = http.client.HTTPSConnection("api.har.com")
+
+    # Check if address or MLS number is provided and set appropriate endpoint and payload
+    if obj.address:
+        # Use quick search API if address is provided
+        path = "/chatbot/quicksearch"
+        payload = {"query": obj.address}
+    elif obj.harid:
+        # Use listing API directly if MLS number is provided
+        path = f"/chatbot/property/{obj.harid}"
+        payload = {}  # No payload needed for direct listing lookup
+    else:
+        raise ValueError("Either address or MLS number must be provided.")
+
+    # Convert payload to query string if there are payload parameters
+    if payload:
+        query_string = "&".join([f"{k}={v}" for k, v in payload.items()])
+        path += f"?{query_string}"
+
+    json_response = None
+    try:
+        if obj.harid:
+            json_response, _ = get_property_search(conn, path)
+
+        # Handle quick search API response if an address was used
+        elif obj.address:
+            json_response, _ = get_property_search(conn, path)
+            harids = [
+                result.get("harid", None) for result in json_response.get("results", [])
+            ]
+
+            # Use the first MLS number to get listing details
+            if harids:
+                listing_path = f"/chatbot/property/{harids[0]}"
+                json_response, _ = get_property_details(conn, listing_path)
+
+    finally:
+        conn.close()
+
+    # Process the listing API response to extract required details
+    if json_response.get("status", None) == "success":
+        result, found_harid = extract_key_objects(json_response)
+        return {
+            "total_number_of_properties": 1 if found_harid else 0,
+            "properties": result,
+        }
+
+    return {"total_number_of_properties": 0, "properties": []}
+
 @tool(args_schema=AgentSearchInput)
 def search_agent(Name) ->Dict:
     """Search property agent based on name """
