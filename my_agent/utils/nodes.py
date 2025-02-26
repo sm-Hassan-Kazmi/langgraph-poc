@@ -1,12 +1,11 @@
 from functools import lru_cache
 from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
-from my_agent.utils.tools import tools, search_agent, search_properties, search_properties_by_address
+from utils.tools import tools, search_agent, search_properties, search_properties_by_address
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import StateGraph, END
-from my_agent.utils.parser import Answer, RichContent
+from utils.parser import Answer, RichContent
 
-flag= False
 
 tool_node1 = ToolNode([search_properties])
 tool_node2 = ToolNode([search_agent])

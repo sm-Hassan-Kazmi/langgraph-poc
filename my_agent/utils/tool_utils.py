@@ -22,7 +22,7 @@ from langchain.callbacks.manager import CallbackManager
 import hashlib
 
 
-from my_agent.utils.models.constants import (
+from utils.models.constants import (
     DEFAULT_MAX_LISTINGS,
     API_SUCCESS_CODE,
     SESSION_KEY_PREFIX,

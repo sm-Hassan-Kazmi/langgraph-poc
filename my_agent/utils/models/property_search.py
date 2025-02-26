@@ -1,7 +1,7 @@
 from pydantic.v1 import BaseModel, Field
 from langchain_core.pydantic_v1 import BaseModel, Field
 from typing import List, Optional, Dict, Union, Any
-from my_agent.utils.models.constants import DEFAULT_MAX_LISTINGS
+from utils.models.constants import DEFAULT_MAX_LISTINGS
 
 
 class PropertySearchFields(BaseModel):

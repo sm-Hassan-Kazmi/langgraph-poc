@@ -4,9 +4,9 @@ import urllib
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 from langchain.tools import tool
-from my_agent.utils.tool_utils import search_community_ID, search_school_ID, get_fips_codes,get_property_details, map_property_types_to_ids, map_property_availablity, get_property_search, extract_key_objects
+from utils.tool_utils import search_community_ID, search_school_ID, get_fips_codes,get_property_details, map_property_types_to_ids, map_property_availablity, get_property_search, extract_key_objects
 from urllib.parse import urlencode
-from my_agent.utils.models.property_search import PropertySearchFields, PropertySearchInput
+from utils.models.property_search import PropertySearchFields, PropertySearchInput
 
 
 class PropertySearchResultItem(BaseModel):
