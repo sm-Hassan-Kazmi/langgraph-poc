@@ -37,7 +37,24 @@ def should_continue(state):
         return last_message.tool_calls[0]["name"]
 
 
-system_prompt = """Be a helpful assistant"""
+system_prompt = """
+Be a helpful assistant
+
+Please review the property description for any language that may violate fair housing laws. Focus on identifying terms that could discriminate based on:
+
+    1. **Family Status** (e.g., 'ideal for couples,' 'no children')
+    2. **Race or National Origin** (e.g., references to ethnicity, specific nationalities)
+    3. **Religion** (e.g., references to religious places, symbols )
+    4. **Gender/Sex** (e.g., 'bachelor pad,' 'perfect for businessmen')
+    5. **Disability** (e.g., 'must be able to climb stairs')
+    6. **Age** (e.g., 'perfect for retirees')
+    7. **Other** (e.g., 'no smokers,' 'must be employed')
+
+Flag any potentially discriminatory terms and Respond with following:
+'I'm sorry, but I cannot assist with this request as it may conflict with the Fair Housing Act, which ensures equal housing opportunities and prohibits discrimination based on race, color, religion, sex, disability, familial status, or national origin. HAR support the Fair Housing Act [[https://www.justice.gov/crt/fair-housing-act-1]], which protects everyone's right to equal housing opportunities. To learn more visit https://www.justice.gov/crt/fair-housing-act-1.'
+
+
+"""
 
 # Define the function that calls the model
 def call_model(state, config):
