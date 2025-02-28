@@ -4,7 +4,7 @@ from langchain_openai import ChatOpenAI
 from my_agent.utils.tools import tools, search_agent, search_properties, search_properties_by_address
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import StateGraph, END
-from my_agent.utils.parser import Answer, RichContent
+from my_agent.utils.parser import Answer, get_schema
 
 flag= False
 
@@ -68,14 +68,19 @@ def call_model(state, config):
 
 def output_parser(state, config):
     messages = state["messages"]
-    Schema = Answer.schema()
-    
-    if(state["messages"][-1].name == "search_properties_by_address"):
-        Schema = {"pretext": str}
-    prompt ="Be a helpful assistant and Extract the event information from last ai message. and create a json object with only relevant fields from the following schema:  {}".format(Schema)
-
-    messages = [{"role": "system", "content":  prompt}] + messages
-    model =model = ChatOpenAI(temperature=0, model_name="gpt-4o")
+    Schema = get_schema(state)
+    print(state["messages"][-1].name)
+    card = None
+    if (state["messages"][-1].name=="search_by_properties"):
+        card ="whole property"
+    prompt =f"""
+        Be a helpful assistant and Extract the event information from last ai message. and create a JSON object with only relevant fields from the following schema:  {Schema}
+        Card field should be None if the answer is not directly related to Agent ,{card} or School.
+        If Card is None, pretext should contain all information to answer the user query.
+    """
+    messages = [{"role": "system", "content":  prompt}] + [messages[-1].content]
+    print(messages)
+    model = ChatOpenAI(temperature=0, model_name="gpt-4o")
     response = model.invoke(messages)
     # We return a list, because this will get added to the existing list
     return {"messages": [response]}
