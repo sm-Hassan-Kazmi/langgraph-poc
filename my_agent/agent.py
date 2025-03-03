@@ -83,6 +83,7 @@ write_config = {
         "id": str(uuid.uuid4()),
         "thread_id": str(uuid.uuid4()),
         "checkpoint_ns": "chat_history",
+        "user_id" : "1234"
     }
 }
 read_config = {
