@@ -5,7 +5,7 @@ from my_agent.utils.tools import tools, search_agent, search_properties, search_
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import StateGraph, END
 from my_agent.utils.parser import Answer, get_schema
-
+from langchain_core.messages import HumanMessage
 flag= False
 
 tool_node1 = ToolNode([search_properties])
@@ -88,6 +88,12 @@ def call_model(state, config):
 def output_parser(state, config):
     messages = state["messages"]
     Schema = get_schema(state)
+    # print(messages)
+    for message in reversed(messages):
+        if isinstance(message, HumanMessage):
+            question = message.content.strip()
+            break
+    
     print(state["messages"][-1].name)
     card = None
     if (state["messages"][-1].name=="search_by_properties"):
@@ -95,7 +101,7 @@ def output_parser(state, config):
     prompt =f"""
         Be a helpful assistant and Extract the event information from last ai message. and create a JSON object with only relevant fields from the following schema:  {Schema}
         Card field should be None if the answer is not directly related to Agent ,{card} or School.
-        If Card is None, pretext should contain all information to answer the user query.
+        If Card is None, pretext should contain all information to answer the user query ** {question} **.
     """
     messages = [{"role": "system", "content":  prompt}] + [messages[-1].content]
     print(messages)
