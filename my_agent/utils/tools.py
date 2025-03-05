@@ -4,10 +4,20 @@ import urllib
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 from langchain.tools import tool
-from my_agent.utils.tool_utils import search_community_ID, search_school_ID, get_fips_codes,get_property_details, map_property_types_to_ids, map_property_availablity, get_property_search, extract_key_objects
+from my_agent.utils.tool_utils import search_community_ID, search_school_ID, get_fips_codes,get_property_details, map_property_types_to_ids, map_property_availablity, get_property_search, extract_key_objects, get_api_headers
 from urllib.parse import urlencode
 from my_agent.utils.models.property_search import PropertySearchFields, PropertySearchInput
 
+from datetime import datetime, timedelta
+from typing import List, Dict, Any, Optional, Tuple
+import re
+import requests
+import os
+
+v1_url: str = os.environ["V1_URL"]
+test_mode: str = os.environ["TEST_MODE"]
+secret_key: str = os.environ["HAR_SECRET_KEY"]
+token: str = os.environ["HAR_TOKEN"]
 
 class PropertySearchResultItem(BaseModel):
     mlsnum: Optional[str]
@@ -86,27 +96,22 @@ def search_properties_by_address(
     return {"total_number_of_properties": 0, "properties": []}
 
 @tool(args_schema=AgentSearchInput)
-def search_agent(Name) ->Dict:
-    """Search property agent based on name """
-    # Implement your API connection and handling here
-    # Dummy data for the sake of example
-    # print("1")
-    properties = [
-        {"Agent Name: ": "JohnDoe",
-        "Agent profile":"www.johndoe.com",
-            "property":
-        # PropertySearchResultItem(
-          """  mlsnum="123456",
-            address="123 Main St",
-            price=350000.0,
-            beds=3,
-            baths=2,
-            city="Houston",
-            zipCode="77002",
-            sqft=1500   """} 
-            # )
-    ]
-    return properties
+def search_agent(Name: AgentSearchInput):
+    """Search property agent based on name """    
+    agent_detail = None
+    conn = http.client.HTTPSConnection("api.har.com")
+    path = f"/member?agent={Name}"
+    timestamp = int((datetime.now() + timedelta(hours=2)).timestamp() * 1000)
+    headers = get_api_headers(path, token, secret_key, timestamp, test_mode, "", "", "")
+    path = path.replace(" ", "%20")
+    conn.request("GET", path, "", headers)
+    res = conn.getresponse()
+    data = res.read()
+    print(data, headers)
+    # Convert the data to a JSON object
+    agent_detail = json.loads(data.decode("utf-8"))
+    return agent_detail
+
 # Example use:
 # Create an instance of PropertySearchFields with the desired search criteria
 # search_criteria = PropertySearchFields(city=["Houston"], max_price=500000)
