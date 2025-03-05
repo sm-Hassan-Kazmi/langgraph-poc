@@ -110,6 +110,8 @@ def search_agent(Name: AgentSearchInput):
     print(data, headers)
     # Convert the data to a JSON object
     agent_detail = json.loads(data.decode("utf-8"))
+    if "members" in agent_detail and isinstance(agent_detail["members"], list):
+        agent_detail["members"] = agent_detail["members"][:5]
     return agent_detail
 
 # Example use:
